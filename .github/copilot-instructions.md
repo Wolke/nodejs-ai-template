@@ -1,19 +1,17 @@
-# nodejs-ai-template
+# instruction
 
-## 專案架構：內部套件化策略
-
+## 目的
 本專案採用「內部套件化（internal packages）」策略，將穩定的程式碼封裝為內部套件，以減少 Copilot / GPT 模型在大型 TypeScript 專案中產生幻覺或重複程式碼的風險。
 
-### 為什麼使用內部套件化？
-
+## 原因
 當專案程式碼量增大，LLM 可能無法記住所有上下文，導致：
 - 忘記已有功能而重寫
 - 重複產生類似程式碼
 - 誤用函式或物件結構
 
-### 套件化策略流程
+## 套件化策略流程
 
-#### 1. 將穩定邏輯抽出成內部套件
+### 1. 將穩定邏輯抽出成內部套件
 - 路徑格式：`packages/<package-name>/`
 - 每個套件需具備以下結構：
   ```bash
@@ -26,22 +24,27 @@
       tsconfig.json
   ```
 
-#### 2. 註明每個套件的單一責任
+### 2. 註明每個套件的單一責任
 例如：
 - `string-utils`：字串處理邏輯
 - `billing-core`：費用計算核心邏輯
 
-#### 3. 在主專案中使用套件
+### 3. 在主專案中使用套件
 - 使用 `pnpm` 的 monorepo 管理方式
 - 使用 `import { xxx } from '@your-scope/your-package'` 匯入套件功能
 - 每個套件的 `package.json` 中要設好 `"name": "@your-scope/your-package"`
 
-#### 4. 寫好暴露點 `index.ts`
+### 4. 寫好暴露點 `index.ts`
 讓 Copilot 可以清楚知道此套件有哪些對外功能。
 
-### 範例
+### 5. 搭配 copilot.json 或 instruction.md 提示
+在 Copilot 的專案 context 中強化如下描述：
 
-#### 套件 `string-utils`
+> 本專案中所有通用邏輯，請優先使用內部套件，例如 `@myproject/string-utils` 提供了常見的字串處理函式（如 `countChar`, `slugify`, `truncate` 等），請勿重複產生。
+
+## 範例
+
+### 套件 `string-utils`
 
 **packages/string-utils/src/index.ts**
 ```ts
@@ -60,14 +63,14 @@ export function countChar(str: string, char: string): number {
 }
 ```
 
-#### 主程式使用
+### 主程式使用
 ```ts
 import { countChar } from '@myproject/string-utils';
 
 const count = countChar('hello world', 'l'); // 3
 ```
 
-### 注意事項
+## 注意事項
 - 若有多層資料結構或共用邏輯，建議以 README 說明每個套件的使用情境與限制。
 - 一次只專注在一個套件的開發，避免同時修改多個套件導致上下文混亂。
-- 使用內部套件可大幅減少重複程式碼產生，提高專案維護性。
+- 如果是空專案，建議先建立一個專案結構，和開發者討論後再進行套件化。
