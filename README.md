@@ -1,21 +1,21 @@
 # nodejs-ai-template
 
-## 專案架構：內部套件化策略
+## Project Architecture: Internal Packaging Strategy
 
-本專案採用「內部套件化（internal packages）」策略，將穩定的程式碼封裝為內部套件，以減少 Copilot / GPT 模型在大型 TypeScript 專案中產生幻覺或重複程式碼的風險。
+This project adopts an **internal packaging strategy**, where stable code is encapsulated into internal packages. The goal is to reduce hallucinations and redundant code generation from Copilot when working on large-scale TypeScript projects.
 
-### 為什麼使用內部套件化？
+### Why Use Internal Packaging?
 
-當專案程式碼量增大，LLM 可能無法記住所有上下文，導致：
-- 忘記已有功能而重寫
-- 重複產生類似程式碼
-- 誤用函式或物件結構
+As the codebase grows, LLMs may fail to retain the entire context, which can lead to:
+- Rewriting already implemented features
+- Generating duplicate or similar code
+- Misusing functions or object structures
 
-### 套件化策略流程
+### Internal Packaging Workflow
 
-#### 1. 將穩定邏輯抽出成內部套件
-- 路徑格式：`packages/<package-name>/`
-- 每個套件需具備以下結構：
+#### 1. Extract Stable Logic into Internal Packages
+- Path format: `packages/<package-name>/`
+- Each package should follow this structure:
   ```bash
   packages/
     your-package/
@@ -26,22 +26,29 @@
       tsconfig.json
   ```
 
-#### 2. 註明每個套件的單一責任
-例如：
-- `string-utils`：字串處理邏輯
-- `billing-core`：費用計算核心邏輯
+#### 2. Define the Single Responsibility of Each Package
+Examples:
+- `string-utils`: String processing utilities
+- `billing-core`: Core billing logic
 
-#### 3. 在主專案中使用套件
-- 使用 `pnpm` 的 monorepo 管理方式
-- 使用 `import { xxx } from '@your-scope/your-package'` 匯入套件功能
-- 每個套件的 `package.json` 中要設好 `"name": "@your-scope/your-package"`
+#### 3. Use Packages in the Main Project
+- Manage the workspace using `pnpm` monorepo structure
+- Import package functionality with:
+  `import { xxx } from '@your-scope/your-package'`
+- Ensure the `package.json` of each package contains:
+  `"name": "@your-scope/your-package"`
 
-#### 4. 寫好暴露點 `index.ts`
-讓 Copilot 可以清楚知道此套件有哪些對外功能。
+#### 4. Define Clear Entry Points in `index.ts`
+Ensure that Copilot can easily identify all exposed functions from each package.
 
-### 範例
+#### 5. Use `copilot.json` or `instruction.md` for Prompting
+Enhance the Copilot context by including instructions like:
 
-#### 套件 `string-utils`
+> Please prioritize using internal packages for all reusable logic in this project. For instance, `@myproject/string-utils` provides commonly used string functions such as `countChar`, `slugify`, and `truncate`. Avoid regenerating similar code.
+
+### Example
+
+#### Package: `string-utils`
 
 **packages/string-utils/src/index.ts**
 ```ts
@@ -60,14 +67,17 @@ export function countChar(str: string, char: string): number {
 }
 ```
 
-#### 主程式使用
+#### Main Program Usage
 ```ts
 import { countChar } from '@myproject/string-utils';
 
 const count = countChar('hello world', 'l'); // 3
 ```
 
-### 注意事項
-- 若有多層資料結構或共用邏輯，建議以 README 說明每個套件的使用情境與限制。
-- 一次只專注在一個套件的開發，避免同時修改多個套件導致上下文混亂。
-- 使用內部套件可大幅減少重複程式碼產生，提高專案維護性。
+### Notes
+- For nested structures or shared logic, include a README to document usage scenarios and limitations for each package.
+- Focus on one package at a time during development to prevent confusion in project context.
+- For new/empty projects, first establish a basic project structure and align with your team before modularizing into packages.
+- Using internal packages significantly reduces code duplication and improves project maintainability.
+
+[繁體中文版](./README.zh-TW.md)
