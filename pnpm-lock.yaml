@@ -21,6 +21,15 @@ importers:
         specifier: ^5.8.3
         version: 5.8.3
 
+  packages/ai-players:
+    dependencies:
+      '@werewolf/common':
+        specifier: workspace:*
+        version: link:../common
+      '@werewolf/core':
+        specifier: workspace:*
+        version: link:../core
+
   packages/common: {}
 
   packages/core:
