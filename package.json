@@ -6,7 +6,7 @@
     "build": "pnpm -r build",
     "dev": "pnpm -r dev",
     "test": "pnpm -r test",
-    "setup": "pnpm install && pnpm build"
+    "setup": "npm install && pnpm build"
   },
   "keywords": [
     "werewolf",
