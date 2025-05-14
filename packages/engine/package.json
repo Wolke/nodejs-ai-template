@@ -1,0 +1,20 @@
+{
+  "name": "@werewolf/engine",
+  "version": "1.0.0",
+  "description": "狼人殺遊戲引擎，整合核心功能與遊戲流程",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --dts",
+    "dev": "tsup src/index.ts --dts --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["werewolf", "game", "engine"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@werewolf/core": "workspace:*",
+    "@werewolf/game-flow": "workspace:*",
+    "@werewolf/common": "workspace:*"
+  }
+}

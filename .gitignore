@@ -1,0 +1,82 @@
+# 相依套件
+node_modules/
+.pnpm-store/
+
+# 建構輸出
+dist/
+build/
+lib/
+out/
+*.tsbuildinfo
+
+# 快取和暫存檔案
+.cache/
+.temp/
+.tmp/
+.pnpm-debug.log*
+
+# 環境變數和機密
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+*.pem
+
+# 日誌檔
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# 編輯器和 IDE
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.history/
+
+# WebStorm/IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# macOS 相關檔案
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+
+# 覆蓋率報告
+coverage/
+.nyc_output/
+
+# 部署相關
+.vercel
+.netlify
+.serverless/
+
+# 其他
+.turbo
+.docusaurus
+
+# 可能的暫存檔案
+*.swp
+*.swo
+*~
+
+# 本地測試資料
+test/temp/

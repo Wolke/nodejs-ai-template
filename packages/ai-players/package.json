@@ -1,0 +1,19 @@
+{
+  "name": "@werewolf/ai-players",
+  "version": "1.0.0",
+  "description": "狼人殺遊戲AI玩家策略實作",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --dts",
+    "dev": "tsup src/index.ts --dts --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["werewolf", "game", "ai"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@werewolf/core": "workspace:*",
+    "@werewolf/common": "workspace:*"
+  }
+}
