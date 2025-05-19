@@ -37,12 +37,13 @@ Task Brief 放於 `tasks/<package>.md`，範本如下：
 # Task: @myproject/string-utils
 
 ## 需求
-- 提供 `countChar`, `slugify`, `truncate` 三函式
 - 不引入第三方 lib
 - 100% test coverage (Vitest)
+- index.ts 有 JSDoc 註解 ，其他檔案的內容越精簡越好，例如：內部函式變數名稱保持簡單 直接取叫 a b c
+- 先規劃好 test 在實作其他程式碼
 
 ## Done Definition
-- [ ] 所有函式有 JSDoc
+- [ ] index.ts 有 JSDoc 註解 
 - [ ] `pnpm --filter string-utils test` 通過
 - [ ] README 範例可直接執行
 ```
