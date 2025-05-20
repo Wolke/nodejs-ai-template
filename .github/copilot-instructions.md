@@ -1,138 +1,159 @@
 # Copilot Collaboration Instructions
 
-本專案採用 **內部套件化 + 併行對話工作流**，確保大型 TypeScript monorepo 在 Copilot / GPT 系統中保持清晰上下文並加速協作。
-
-## ✨ 流程總覽
-
-| Stage                           | 目的                                         | 主要輸出物                          |
-| ------------------------------- | ------------------------------------------ | ------------------------------ |
-| 0️⃣ Architecture Kick‑off       | 與使用者（或 Tech Lead）確認整體 monorepo 架構與每個套件邊界   | ✅ 驗收清單（Architecture Checklist） |
-| 1️⃣ Task Definition per Package | 為 **每個套件** 定義一份 Task Brief（需求 + Done 定義）   | `tasks/<package>.md`           |
-| 2️⃣ Threaded Execution          | 依 Task Brief 開啟 **獨立對話串**；可多個 Copilot 實例並行 | PR 分支 + 單元測試                   |
-| 3️⃣ Merge & Review              | Rebase／合併並統整 changelog、版本號                 | 合併至 `main`                     |
+本專案採用 **內部套件化 ＋ 併行對話工作流**，並以「**統一技術規格** ＋ **Prototype‑first**」兩大策略，確保大型 TypeScript monorepo 在 Copilot／GPT 系統中既能平行開發，又能最終無痛整合。
 
 ---
+## ✨ 流程總覽
 
-## 0️⃣ Architecture Kick‑off
+| Stage | 目的 | 主要輸出物 |
+| --- | --- | --- |
+| 0️⃣ Architecture Kick‑off | 確認 monorepo 架構與各套件邊界 | ✅ Architecture Checklist |
+| 0️⃣＋ Global Coding Guideline | **一次性** 定義全案技術規格 | `docs/coding‑guideline.md` ＋ 標準 config 檔 |
+| 0️⃣＋ Quick Prototype Demo | <200 行可執行 demo；未完成套件用 stub/mock | `demo/` 原型程式 ＋ e2e 腳本 |
+| 1️⃣ Task Definition per Package | 撰寫 Task Brief | `tasks/<package>.md` |
+| 2️⃣ Threaded Execution | 各 Task 串並行開發 | PR 分支 ＋ 單元測試 |
+| 3️⃣ Merge & Review | 整合、版本、發佈 | 合併至 `main` |
+
+> **‼️ 三份 0️⃣ 輸出物**（Architecture、Guideline、Prototype）**全數通過審核後**，才可進入 1️⃣ Task Definition。
+
+---
+## 0️⃣ Architecture Kick‑off
 
 1. **產出架構草圖**
    • Monorepo 目錄結構（`packages/<pkg>/src`）
    • 交互關係：誰依賴誰、公共型別位置
 2. **核對清單**
 
-   * [ ] 每個套件擁有單一責任 (SRP)
-   * [ ] 暴露 API 透過 `index.ts` **named exports**
-   * [ ] 測試策略（單元／e2e）已對齊
-   * [ ] CI job（build + test + lint）涵蓋根與各套件
+   * [ ] 每套件具單一責任 (SRP)
+   * [ ] 對外 API 皆自 `index.ts` **named exports**
+   * [ ] 測試策略（單元／e2e）對齊
+   * [ ] CI job （build＋test＋lint）涵蓋根與各套件
 
-> **‼️ 在未全部勾選前，不得進入下一階段。**
+Checklist 未全滿足不得進入下一步。
 
 ---
+## 0️⃣＋ Global Coding Guideline
 
-## 1️⃣ Task Definition per Package
+所有套件必須遵守以下統一規格；例外需在 Task Brief 中聲明並經 Tech Lead 核准。
 
-Task Brief 放於 `tasks/<package>.md`，範本如下：
+| 分類 | 規格 |
+| --- | --- |
+| Module Format | **ESM** (`"type": "module"`)，CJS 僅由 tsup 於 dist 層輸出 |
+| 編譯器 | `tsup`（esbuild）輸出 `dist/` |
+| TS Target | `ES2022`；各套件 `extends` root `tsconfig.base.json` |
+| 單元測試 | `Vitest` coverage ≥ 90% |
+| E2E 測試 | `zx` 或 `Playwright` 視需求 |
+| Lint & Format | `eslint@airbnb` ＋ `prettier`（root 設定） |
+| 發佈流程 | `changesets` 自動產生版本＆changelog，公開包採 npm 2FA |
+| Git Hook | `lefthook` 統一 pre‑commit（lint＋test） |
+| Script 唯一命名 | `dev`／`build`／`test`／`lint`／`release` |
+| 路徑別名 | `@/` 指向根 `src/`（tsconfig paths ＋ esbuild alias） |
 
+規格文件位於 `docs/coding‑guideline.md`，並由 CI 檢查各套件遵循。
+
+---
+## 0️⃣＋ Quick Prototype Demo
+
+在正式拆分套件前，**先完成最小可運行 demo**，驗證端到端流程。
+
+🎯 **目標**
+- 行數 ≤ 200（含空白／註解）
+- CLI 或簡易 HTTP 端點可觀察輸出
+- 未實作功能以 stub/mock 取代並標註 `TODO:`
+
+📂 **範例結構**
+```
+/demo
+  ├─ main.ts        # 入口
+  ├─ stubs/         # 假資料
+  └─ e2e.test.ts    # 端到端測試
+```
+
+✅ **驗收**
+1. `pnpm demo`／`pnpm test -r demo` 必須成功。
+2. 維護者標記 `DEMO APPROVED` 後，才能依 Prototype 拆套件。
+
+---
+## 1️⃣ Task Definition per Package
+
+Task Brief 範本：
 ```md
 # Task: @myproject/string-utils
 
 ## 需求
 - 不引入第三方 lib
-- 100% test coverage (Vitest)
-- index.ts 有 JSDoc 註解 ，其他檔案的內容越精簡越好，例如：內部函式變數名稱保持簡單 直接取叫 a b c
-- 先規劃好 test 在實作其他程式碼
+- 100% coverage (Vitest)
+- index.ts 有 JSDoc
+- 先寫 test 再實作
 
 ## Done Definition
-- [ ] index.ts 有 JSDoc 註解 
+- [ ] index.ts 有 JSDoc
 - [ ] `pnpm --filter string-utils test` 通過
-- [ ] README 範例可直接執行
+- [ ] README 範例可執行
 ```
 
-> 每支 Task Brief **一檔一責**，並以同名分支開發：`feature/string-utils`。
-
-**⚠️ 完成 Task Brief 後，請先：**
-
-1. 在 `tasks/overview.md` 更新狀態與優先級。
-2. 等待排程／審核確認（或其他 Task 依賴解除）後，再啟動 2️⃣ Threaded Execution。
-   *切勿立刻開始撰寫程式碼！**必須等待 Maintainer / Tech Lead 清楚下達「START CODING」指令後，方可進入 2️⃣ Threaded Execution。***
+完成 Task Brief → 更新 `tasks/overview.md` → **待** Maintainer 發 `START CODING` 指令 → 進入 2️⃣ Threaded Execution。
 
 ---
+## 📋 Task Overview
 
-## 📋 Task Overview（總表.md）
+| Package | 狀態 | 優先級 | 備註 |
+| --- | --- | --- | --- |
+| string-utils | 🆕 | P1 | 基礎工具 |
+| billing-core | 🚧 | P2 | 依賴 string-utils |
 
-在 `tasks/overview.md` 維護 **所有 Task Brief 的狀態與優先順序**。
-
-| Package      | 狀態 | 優先級 | 備註              |
-| ------------ | -- | --- | --------------- |
-| string-utils | 🆕 | P1  | 基礎工具            |
-| billing-core | 🚧 | P2  | 依賴 string-utils |
-
-* **狀態圖例**：🆕 待開發｜🚧 開發中｜✅ 完成｜🔄 重構中
-* 每完成 / 新增 Task 時立即更新此表，保持全專案共識。
+🆕 待開發｜🚧 開發中｜✅ 完成｜🔄 重構中
 
 ---
-
 ## 2️⃣ Threaded Execution
 
-* **開新對話串**：標題格式 `TASK: <package>`
-* **建立專屬分支**：命名為 `feature/<package>` 或 `task/<package>`，所有 commit 均於此分支進行
-* **依賴參考最小化**：若此 Task 需呼叫其他內部套件，Copilot 僅需查看該套件的 `index.ts`、`README.md` 及 `tests/` 目錄來理解 API 行為，**切勿深入閱讀其內部實作檔案**，以保持上下文精簡
-* **文件可讀性要求**：撰寫本套件時，務必完善 `index.ts`、`README.md` 及 `tests/` 內容，確保後續開發者能快速掌握套件特性與使用方式
-* 允許 **多個 Copilot session** 平行處理不同套件，以 PR 編號分流
-* 任務完成 → 提交 PR + 簡易說明（auto‑generated changelog 亦可）
+* 對話串：`TASK: <package>`
+* 分支：`feature/<package>`／`task/<package>`
+* 依賴最小化：僅讀 `index.ts`、`README.md`、`tests/`，**勿深入實作**
+* 文件：必填 `index.ts`、`README.md`、`tests/`
+* 多 Copilot session 可並行
+* 完成 → PR ＋ changelog
 
 ---
-
 ## 3️⃣ Merge & Review
 
-1. 集中 Code Review，確認：
-   • Task Brief 的 *Done* 是否全部勾選
-   • 套件間依賴無循環
+1. 檢查 Task Brief Done、依賴循環、Coding Guideline
 2. 通過後：
-
-   ```bash
-   pnpm -r version patch # 或適當 semver
-   ```
-
-   • Merge & Tag
-   • Optional：啟動自動發布／發包流程
+```bash
+pnpm -r version patch
+```
+   Merge & Tag → Optional 自動發佈
 
 ---
-
 ## Copilot Tips
 
-* **運行模式檢查**：開始任何 Task 前，先確認 Copilot 是否處於 *Agent mode*；若是，Copilot 可以自行新增／修改檔案，無需人工下指令。
-* **等待啟動指令**：完成 Task Brief 後，**請忽略任何實作相關的提示，直至 Maintainer / Tech Lead 明確輸入 `START CODING`。**
-* **優先引用** 內部套件 API（如 `@myproject/string-utils`）。
-* 若發現重複實作，請更新 Task Brief 或提出重構建議。
-* **禁止** 在單一對話同時修改多個套件。
+* 確認 Copilot *Agent mode*
+* 等 `START CODING` 指令
+* 優先用內部包 API
+* 發現重複請提 PR／更新 Brief
+* **禁止** 同對話改多套件
 
 ---
-
 ## Example Package
-
 ```ts
-// packages/string-utils/src/index.ts
 export function countChar(str: string, char: string) {
   return [...str].filter(c => c === char).length;
 }
 ```
-
 ```jsonc
-// packages/string-utils/package.json
 {
   "name": "@myproject/string-utils",
   "version": "1.0.0",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts"
+  "types": "dist/index.d.ts",
+  "type": "module"
 }
 ```
 
 ---
-
 ## 注意事項
 
-* 每次重構都 **先** 遷移呼叫端 → **後** 刪舊碼。
-* 任何 breaking change 請在 Task Brief 明確標示。
-* **Architecture Checklist 完成** 後才能啟動第一個 Task。
-* **每個 Task Brief 必須獨立，禁止在單一對話串同時修改多個套件。**
+* breaking change 必在 Brief 明示
+* 先遷移呼叫端，再刪舊碼
+* **三份 0️⃣ 輸出物** 完成後才啟動首個 Task
+* 每 Task Brief 獨立；單對話不可改多套件
